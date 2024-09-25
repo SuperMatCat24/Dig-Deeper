@@ -11,6 +11,7 @@ RockParticle.decel = 700
 RockParticle.spawnTime = 0
 
 RockParticle.init = function
+    if not self.isOnScreen then return
     disp.sprites.insert 0, self
     super.init
     self.spawnTime = time
@@ -81,6 +82,7 @@ SparkleParticle.scale = 4
 SparkleParticle.spawnTime = 0
 
 SparkleParticle.init = function
+    if not self.isOnScreen then return
     disp.sprites.insert 0, self
     super.init
     self.spawnTime = time
