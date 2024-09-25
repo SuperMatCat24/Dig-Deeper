@@ -237,7 +237,7 @@ LvlFourRobot.minePower = 4
 LvlFourRobot.sellValue = 250
 LvlFourRobot.fuelTime = 15
 LvlFourRobot.fuelAmount = 3
-LvlFourRobot.speed = 700
+LvlFourRobot.speed = 600
 
 LvlFiveRobot = new Robot
 LvlFiveRobot.image = file.loadImage("pics/robo5.png")
@@ -250,7 +250,7 @@ LvlFiveRobot.minePower = 15
 LvlFiveRobot.sellValue = 1000
 LvlFiveRobot.fuelTime = 5
 LvlFiveRobot.fuelAmount = 30
-LvlFiveRobot.speed = 600
+LvlFiveRobot.speed = 500
 
 WiperRobot = new Robot
 WiperRobot.image = file.loadImage("pics/wiper.png")
@@ -260,9 +260,9 @@ WiperRobot.path = []
 
 WiperRobot.mineTime = 0.5
 WiperRobot.minePower = 4
-WiperRobot.sellValue = 75
-WiperRobot.fuelTime = 25
-WiperRobot.fuelAmount = 6
+WiperRobot.sellValue = 750
+WiperRobot.fuelTime = 20
+WiperRobot.fuelAmount = 50
 WiperRobot.speed = 450
 WiperRobot.lastPos = {}
 
@@ -290,3 +290,17 @@ WiperRobot.getNextPath = function
         self.lastPos.y,
         ]
 end function
+
+BlasterRobot = new WiperRobot
+BlasterRobot.image = file.loadImage("pics/blaster.png")
+BlasterRobot.position = {}
+BlasterRobot.facing = {}
+BlasterRobot.path = []
+
+BlasterRobot.mineTime = 1
+BlasterRobot.minePower = 45
+BlasterRobot.sellValue = 1500
+BlasterRobot.fuelTime = 5
+BlasterRobot.fuelAmount = 20
+BlasterRobot.speed = 200
+BlasterRobot.lastPos = {}
