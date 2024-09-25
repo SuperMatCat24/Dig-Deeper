@@ -2,6 +2,7 @@
 import "mathUtil"
 import "textUtil"
 import "listUtil"
+import "stringUtil"
 import "chars"
 
 import "updatable"
@@ -324,8 +325,6 @@ updateUI = function
     textUtil.printAt(55, 19, "Diamond: " + formatNumber(diamond))
     text.color = color.brown
     textUtil.printAt(55, 18, "Crates: " + globals.crates.len + "   ")
-    text.color = color.white
-    textUtil.printAt(55, 16, "Time: " + floor(time - globals.startTime))
 end function
 
 sellScreen = function
@@ -445,9 +444,51 @@ sellScreen = function
     end while
 end function
 
+BuyButton = new textUI.Button
+BuyButton.cost = 0
+BuyButton.costMultiplier = 30
+BuyButton.buyAmountMultiplier = 1
+BuyButton.exponent = 3
+BuyButton.buyResult = ["breakStrength", 1]
+BuyButton.text = "Break Strength: "
+
+BuyButton.make = function(column, row, width=12)
+    noob = new self
+	noob.fromCol = column; noob.toCol = column+width-1
+	noob.fromRow = row; noob.toRow = row
+	noob = super.make(column, row, width, "")
+	//noob.caption = ""
+	return noob
+end function
+
+BuyButton.updateCost = function
+    self.cost = ceil(self.costMultiplier * (self.exponent ^ (globals[self.buyResult[0]]*self.buyAmountMultiplier)))
+end function
+
+BuyButton.updateText = function
+    text.color = color.yellow
+    textUtil.printAt self.fromCol, self.fromRow+1, self.text + formatNumber(globals[self.buyResult[0]], 1) + "    "
+    self.caption = "Buy For: " + formatNumber(self.cost)
+    self.draw
+end function
+
+BuyButton.action = function
+    if globals.money >= self.cost then
+        globals.money -= self.cost
+        globals[self.buyResult[0]] += self.buyResult[1]
+        sound.ranger.play
+        sound.ranger.adjust globals.soundVol
+    end if
+    self.updateCost
+    self.updateText
+    updateUI
+    return
+end function
+
 buyScreen = function
     globals.windowActive = true
     gfx.fillRect 64, 64, 960-64*5, 640-64*2, color.black
+
     exit = textUI.Button.make(46, 22, 3, "X")
 	exit.start
 	exit.action = function
@@ -456,115 +497,55 @@ buyScreen = function
         return
 	end function
 
-    updateBreakCost = function
-        outer.breakCost = ceil(25 * (2.5 ^ breakStrength))
-    end function
-    updateBreakCost
-    textUtil.printAt 5, 22, "Break Strength: " + formatNumber(breakStrength, 1) + "    "
-    breakButton = textUI.Button.make(5, 21, 18, "Buy For: " + formatNumber(breakCost))
-	breakButton.start
-	breakButton.action = function
-        if globals.money >= breakCost then
-            globals.money -= breakCost
-            globals.breakStrength += 0.75
-            sound.ranger.play
-            sound.ranger.adjust globals.soundVol
-        end if
-        updateBreakCost
-        textUtil.printAt 5, 22, "Break Strength: " + formatNumber(breakStrength, 1) + "    "
-        self.caption = "Buy For: " + formatNumber(breakCost)
-        self.draw
-        updateUI
-        return
-	end function
+    breakButton = BuyButton.make(5, 21, 18)
+    breakButton.costMultiplier = 25
+    breakButton.buyAmountMultiplier = 1
+    breakButton.exponent = 2.5
+    breakButton.buyResult = ["breakStrength", 0.75]
+    breakButton.text = "Break Strength: "
+    breakButton.updateCost
+    breakButton.updateText
+    breakButton.start
 
-    updateSellMultiCost = function
-        outer.sellMultiCost = ceil(10 * (2 ^ (sellMultiplier*5)))
-    end function
-    updateSellMultiCost
-    textUtil.printAt 5, 20, "Sell Multiplier: " + formatNumber(sellMultiplier, 1) + "    "
-    sellMultiButton = textUI.Button.make(5, 19, 18, "Buy For: " + formatNumber(sellMultiCost))
-	sellMultiButton.start
-	sellMultiButton.action = function
-        if globals.money >= sellMultiCost then
-            globals.money -= sellMultiCost
-            globals.sellMultiplier += 0.2
-            sound.ranger.play
-            sound.ranger.adjust globals.soundVol
-        end if
-        updateSellMultiCost
-        textUtil.printAt 5, 20, "Sell Multiplier: " + formatNumber(sellMultiplier, 1) + "    "
-        self.caption = "Buy For: " + formatNumber(sellMultiCost)
-        self.draw
-        updateUI
-        return
-	end function
+    sellMultiButton = BuyButton.make(5, 19, 18)
+    sellMultiButton.costMultiplier = 10
+    sellMultiButton.buyAmountMultiplier = 5
+    sellMultiButton.exponent = 2
+    sellMultiButton.buyResult = ["sellMultiplier", 0.2]
+    sellMultiButton.text = "Sell Multiplier: "
+    sellMultiButton.updateCost
+    sellMultiButton.updateText
+    sellMultiButton.start
 
-    updateOreRegenCost = function
-        outer.oreRegenCost = ceil(25 * (1.75 ^ (oreRegen*3)))
-    end function
-    updateOreRegenCost
-    textUtil.printAt 5, 18, "Ore Regeneration Multiplier: " + formatNumber(oreRegen, 1) + "    "
-    oreRegenButton = textUI.Button.make(5, 17, 18, "Buy For: " + formatNumber(oreRegenCost))
-	oreRegenButton.start
-	oreRegenButton.action = function
-        if globals.money >= oreRegenCost then
-            globals.money -= oreRegenCost
-            globals.oreRegen += 0.3
-            sound.ranger.play
-            sound.ranger.adjust globals.soundVol
-        end if
-        updateOreRegenCost
-        textUtil.printAt 5, 18, "Ore Regeneration Multiplier: " + formatNumber(oreRegen, 1) + "    "
-        self.caption = "Buy For: " + formatNumber(oreRegenCost)
-        self.draw
-        updateUI
-        return
-	end function
+    oreRegenButton = BuyButton.make(5, 17, 18)
+    oreRegenButton.costMultiplier = 25
+    oreRegenButton.buyAmountMultiplier = 3
+    oreRegenButton.exponent = 1.75
+    oreRegenButton.buyResult = ["oreRegen", 0.5]
+    oreRegenButton.text = "Ore Regeneration Multiplier: " 
+    oreRegenButton.updateCost
+    oreRegenButton.updateText
+    oreRegenButton.start
 
-    updateStoneRegenCost = function
-        outer.stoneRegenCost = ceil(5 * (1.5 ^ (stoneRegen*4)))
-    end function
-    updateStoneRegenCost
-    textUtil.printAt 5, 16, "Stone Regeneration Multiplier: " + formatNumber(stoneRegen, 1) + "    "
-    stoneRegenButton = textUI.Button.make(5, 15, 18, "Buy For: " + formatNumber(stoneRegenCost))
-	stoneRegenButton.start
-	stoneRegenButton.action = function
-        if globals.money >= stoneRegenCost then
-            globals.money -= stoneRegenCost
-            globals.stoneRegen += 0.5
-            sound.ranger.play
-            sound.ranger.adjust globals.soundVol
-        end if
-        updateStoneRegenCost
-        textUtil.printAt 5, 16, "Stone Regeneration Multiplier: " + formatNumber(stoneRegen, 1) + "    "
-        self.caption = "Buy For: " + formatNumber(stoneRegenCost)
-        self.draw
-        updateUI
-        return
-	end function
+    stoneRegenButton = BuyButton.make(5, 15, 18)
+    stoneRegenButton.costMultiplier = 10
+    stoneRegenButton.buyAmountMultiplier = 3
+    stoneRegenButton.exponent = 1.5
+    stoneRegenButton.buyResult = ["stoneRegen", 0.5]
+    stoneRegenButton.text = "Stone Regeneration Multiplier: "
+    stoneRegenButton.updateCost
+    stoneRegenButton.updateText
+    stoneRegenButton.start
 
-    updateCoolerCost = function
-        outer.coolerCost = ceil(100 * (1.5 ^ (coolerUpgrade*5)))
-    end function
-    updateCoolerCost
-    textUtil.printAt 5, 14, "Cooler Upgrade: " + formatNumber(coolerUpgrade, 1) + "    "
-    coolerButton = textUI.Button.make(5, 13, 18, "Buy For: " + formatNumber(coolerCost))
-	coolerButton.start
-	coolerButton.action = function
-        if globals.money >= coolerCost then
-            globals.money -= coolerCost
-            globals.coolerUpgrade += 1
-            sound.ranger.play
-            sound.ranger.adjust globals.soundVol
-        end if
-        updateCoolerCost
-        textUtil.printAt 5, 14, "Cooler Upgrade: " + formatNumber(coolerUpgrade, 1) + "    "
-        self.caption = "Buy For: " + formatNumber(coolerCost)
-        self.draw
-        updateUI
-        return
-	end function
+    coolerButton = BuyButton.make(5, 13, 18)
+    coolerButton.costMultiplier = 100
+    coolerButton.buyAmountMultiplier = 5
+    coolerButton.exponent = 1.5
+    coolerButton.buyResult = ["coolerUpgrade", 1]
+    coolerButton.text = "Cooler Upgrade: "
+    coolerButton.updateCost
+    coolerButton.updateText
+    coolerButton.start
 
     while true
         if windowActive == false then 
@@ -585,6 +566,64 @@ buyScreen = function
     end while
 end function
 
+CraftButton = new textUI.Button
+CraftButton.cost = {"stone": 0, "coal": 0, "copper": 0, "gold": 0, "diamond": 0}
+CraftButton.buyResult = "LvlOneRobot"
+CraftButton.text = "Level One Robot: "
+
+CraftButton.make = function(column, row, width=12)
+    noob = new self
+	noob.fromCol = column; noob.toCol = column+width-1
+	noob.fromRow = row; noob.toRow = row
+	noob.caption = ""
+	return noob
+end function
+
+CraftButton.updateText = function
+    text.color = color.yellow
+    textUtil.printAt self.fromCol, self.fromRow+1, self.text
+
+    costString = ""
+    for c in self.cost
+        if c.value == 0 then continue
+        costString += formatNumber(c.value) + " " + str(c.key).capitalized + ", "
+    end for
+
+    costString -= ", "
+
+    self.caption = "Buy: " + costString
+    self.draw
+end function
+
+CraftButton.action = function
+    
+    canBuy = true
+    for c in self.cost
+        if c.value == 0 then continue
+        if globals[c.key] < c.value then 
+            canBuy = false
+            break
+        end if
+    end for
+
+    if canBuy == true then
+        for c in self.cost
+            if c.value == 0 then continue
+            globals[c.key] -= c.value
+        end for
+
+        r = new robots[self.buyResult]
+        r.chunkIndex = globals.currentChunk
+        r.init
+        
+        sound.ranger.play
+        sound.ranger.adjust globals.soundVol
+    end if
+    self.updateText
+    updateUI
+    return
+end function
+
 craftScreen = function
     globals.windowActive = true
     gfx.fillRect 64, 64, 960-64*5, 640-64*2, color.black
@@ -596,167 +635,47 @@ craftScreen = function
         return
 	end function
 
-    updateRobotOneCost = function
-        outer.robotOneCost = {}
-        outer.robotOneCost["stone"] = 40
-        outer.robotOneCost["coal"] = 15
-    end function
-    updateRobotOneCost
-    textUtil.printAt 5, 22, "Lvl 1 Robot: "
-    robotOne = textUI.Button.make(5, 21, 34, "Buy For: " + formatNumber(robotOneCost.coal) + " Coal, " + formatNumber(robotOneCost.stone) + " Stone")
-	robotOne.start
-	robotOne.action = function
-        if globals.coal >= robotOneCost.coal and globals.stone >= robotOneCost.stone then
-            globals.stone -= robotOneCost.stone
-            globals.coal -= robotOneCost.coal
-            r = new robots.LvlOneRobot
-            r.init
-            r.chunkIndex = globals.currentChunk
-            sound.craft.play
-            sound.craft.adjust globals.soundVol
-        end if
-        updateRobotOneCost
-        textUtil.printAt 5, 22, "Lvl 1 Robot: "
-        self.caption = "Buy For: " + formatNumber(robotOneCost.coal) + " Coal, " + formatNumber(robotOneCost.stone) + " Stone"
-        self.draw
-        updateUI
-        return
-	end function
+    robotOne = CraftButton.make(5, 21, 40)
+    robotOne.cost = {"stone": 40, "coal": 15, "copper": 0, "gold": 0, "diamond": 0}
+    robotOne.buyResult = "LvlOneRobot"
+    robotOne.text = "Level One Robot: "
+    robotOne.updateText
+    robotOne.start
 
-    updateRobotTwoCost = function
-        outer.robotTwoCost = {}
-        outer.robotTwoCost["stone"] = 100
-        outer.robotTwoCost["coal"] = 25
-    end function
-    updateRobotTwoCost
-    textUtil.printAt 5, 20, "Lvl 2 Robot: "
-    robotTwo = textUI.Button.make(5, 19, 34, "Buy For: " + formatNumber(robotTwoCost.coal) + " Coal, " + formatNumber(robotTwoCost.stone) + " Stone")
-	robotTwo.start
-	robotTwo.action = function
-        if globals.coal >= robotTwoCost.coal and globals.stone >= robotTwoCost.stone then
-            globals.stone -= robotTwoCost.stone
-            globals.coal -= robotTwoCost.coal
-            r = new robots.LvlTwoRobot
-            r.init
-            r.chunkIndex = globals.currentChunk
-            sound.craft.play
-            sound.craft.adjust globals.soundVol
-        end if
-        updateRobotTwoCost
-        textUtil.printAt 5, 20, "Lvl 2 Robot: "
-        self.caption = "Buy For: " + formatNumber(robotTwoCost.coal) + " Coal, " + formatNumber(robotTwoCost.stone) + " Stone"
-        self.draw
-        updateUI
-        return
-	end function
+    robotTwo = CraftButton.make(5, 19, 40)
+    robotTwo.cost = {"stone": 100, "coal": 25, "copper": 5, "gold": 0, "diamond": 0}
+    robotTwo.buyResult = "LvlTwoRobot"
+    robotTwo.text = "Level Two Robot: "
+    robotTwo.updateText
+    robotTwo.start
 
-    updateRobotThreeCost = function
-        outer.robotThreeCost = {}
-        outer.robotThreeCost["copper"] = 75
-        outer.robotThreeCost["coal"] = 50
-    end function
-    updateRobotThreeCost
-    textUtil.printAt 5, 18, "Lvl 3 Robot: "
-    robotThree = textUI.Button.make(5, 17, 34, "Buy For: " + formatNumber(robotThreeCost.coal) + " Coal, " + formatNumber(robotThreeCost.copper) + " Copper")
-	robotThree.start
-	robotThree.action = function
-        if globals.coal >= robotThreeCost.coal and globals.copper >= robotThreeCost.copper then
-            globals.copper -= robotThreeCost.copper
-            globals.coal -= robotThreeCost.coal
-            r = new robots.LvlThreeRobot
-            r.init
-            r.chunkIndex = globals.currentChunk
-            sound.craft.play
-            sound.craft.adjust globals.soundVol
-        end if
-        updateRobotThreeCost
-        textUtil.printAt 5, 18, "Lvl 3 Robot: "
-        self.caption = "Buy For: " + formatNumber(robotThreeCost.coal) + " Coal, " + formatNumber(robotThreeCost.copper) + " Copper"
-        self.draw
-        updateUI
-        return
-	end function
+    robotThree = CraftButton.make(5, 17, 40)
+    robotThree.cost = {"stone": 100, "coal": 50, "copper": 75, "gold": 0, "diamond": 0}
+    robotThree.buyResult = "LvlThreeRobot"
+    robotThree.text = "Level Three Robot: "
+    robotThree.updateText
+    robotThree.start
 
-    updateRobotFourCost = function
-        outer.robotFourCost = {}
-        outer.robotFourCost["copper"] = 250
-        outer.robotFourCost["coal"] = 100
-    end function
-    updateRobotFourCost
-    textUtil.printAt 5, 16, "Lvl 4 Robot: "
-    robotFour = textUI.Button.make(5, 15, 34, "Buy For: " + formatNumber(robotFourCost.coal) + " Coal, " + formatNumber(robotFourCost.copper) + " Copper")
-	robotFour.start
-	robotFour.action = function
-        if globals.coal >= robotFourCost.coal and globals.copper >= robotFourCost.copper then
-            globals.copper -= robotFourCost.copper
-            globals.coal -= robotFourCost.coal
-            r = new robots.LvlFourRobot
-            r.init
-            r.chunkIndex = globals.currentChunk
-            sound.craft.play
-            sound.craft.adjust globals.soundVol
-        end if
-        updateRobotFourCost
-        textUtil.printAt 5, 16, "Lvl 4 Robot: "
-        self.caption = "Buy For: " + formatNumber(robotFourCost.coal) + " Coal, " + formatNumber(robotFourCost.copper) + " Copper"
-        self.draw
-        updateUI
-        return
-	end function
+    robotFour = CraftButton.make(5, 15, 40)
+    robotFour.cost = {"stone": 500, "coal": 150, "copper": 250, "gold": 10, "diamond": 0}
+    robotFour.buyResult = "LvlFourRobot"
+    robotFour.text = "Level Four Robot: "
+    robotFour.updateText
+    robotFour.start
 
-    updateRobotFiveCost = function
-        outer.robotFiveCost = {}
-        outer.robotFiveCost["gold"] = 300
-        outer.robotFiveCost["diamond"] = 70
-    end function
-    updateRobotFiveCost
-    textUtil.printAt 5, 14, "Lvl 5 Robot: "
-    robotFive = textUI.Button.make(5, 13, 34, "Buy For: " + formatNumber(robotFiveCost.gold) + " Gold, " + formatNumber(robotFiveCost.diamond) + " Diamond")
-	robotFive.start
-	robotFive.action = function
-        if globals.gold >= robotFiveCost.gold and globals.diamond >= robotFiveCost.diamond then
-            globals.gold -= robotFiveCost.gold
-            globals.diamond -= robotFiveCost.diamond
-            r = new robots.LvlFiveRobot
-            r.init
-            r.chunkIndex = globals.currentChunk
-            sound.craft.play
-            sound.craft.adjust globals.soundVol
-        end if
-        updateRobotFiveCost
-        textUtil.printAt 5, 14, "Lvl 5 Robot: "
-        self.caption = "Buy For: " + formatNumber(robotFiveCost.gold) + " Gold, " + formatNumber(robotFiveCost.diamond) + " Diamond"
-        self.draw
-        updateUI
-        return
-	end function
+    robotFive = CraftButton.make(5, 13, 40)
+    robotFive.cost = {"stone": 0, "coal": 1000, "copper": 0, "gold": 500, "diamond": 100}
+    robotFive.buyResult = "LvlFiveRobot"
+    robotFive.text = "Level Five Robot: "
+    robotFive.updateText
+    robotFive.start
 
-    updateWiperRobotCost = function
-        outer.wiperRobotCost = {}
-        outer.wiperRobotCost["stone"] = 1000
-        outer.wiperRobotCost["copper"] = 300
-    end function
-    updateWiperRobotCost
-    textUtil.printAt 5, 12, "Wiper Robot: "
-    wiperRobot = textUI.Button.make(5, 11, 34, "Buy For: " + formatNumber(wiperRobotCost.stone) + " Stone, " + formatNumber(wiperRobotCost.copper) + " Copper")
-	wiperRobot.start
-	wiperRobot.action = function
-        if globals.stone >= wiperRobotCost.stone and globals.copper >= wiperRobotCost.copper then
-            globals.stone -= wiperRobotCost.stone
-            globals.copper -= wiperRobotCost.copper
-            r = new robots.WiperRobot
-            r.init
-            r.chunkIndex = globals.currentChunk
-            sound.craft.play
-            sound.craft.adjust globals.soundVol
-        end if
-        updateWiperRobotCost
-        textUtil.printAt 5, 12, "Wiper Robot: "
-        self.caption = "Buy For: " + formatNumber(wiperRobotCost.stone) + " Stone, " + formatNumber(wiperRobotCost.copper) + " Copper"
-        self.draw
-        updateUI
-        return
-	end function
+    wiperRobot = CraftButton.make(5, 11, 40)
+    wiperRobot.cost = {"stone": 1000, "coal": 0, "copper": 300, "gold": 25, "diamond": 0}
+    wiperRobot.buyResult = "WiperRobot"
+    wiperRobot.text = "Wiper Robot: "
+    wiperRobot.updateText
+    wiperRobot.start
 
     updatePickaxeCost = function
         if globals.pickaxeUpgrade == 0 then
@@ -776,11 +695,11 @@ craftScreen = function
     updatePickaxeCost
     textUtil.printAt 5, 10, "Pickaxe: "
     if globals.pickaxeUpgrade == 0 then
-        pickaxe = textUI.Button.make(5, 9, 34, "Buy For: " + formatNumber(pickaxeCost.stone) + " Stone, " + formatNumber(pickaxeCost.copper) + " Copper")
+        pickaxe = textUI.Button.make(5, 9, 40, "Buy For: " + formatNumber(pickaxeCost.stone) + " Stone, " + formatNumber(pickaxeCost.copper) + " Copper")
     else if globals.pickaxeUpgrade == 1 then
-        pickaxe = textUI.Button.make(5, 9, 34, "Buy For: " + formatNumber(pickaxeCost.copper) + " Copper, " + formatNumber(pickaxeCost.gold) + " Gold")
+        pickaxe = textUI.Button.make(5, 9, 40, "Buy For: " + formatNumber(pickaxeCost.copper) + " Copper, " + formatNumber(pickaxeCost.gold) + " Gold")
     else
-        pickaxe = textUI.Button.make(5, 9, 34, "Buy For: " + formatNumber(pickaxeCost.gold) + " Gold, " + formatNumber(pickaxeCost.diamond) + " Diamond")
+        pickaxe = textUI.Button.make(5, 9, 40, "Buy For: " + formatNumber(pickaxeCost.gold) + " Gold, " + formatNumber(pickaxeCost.diamond) + " Diamond")
     end if
 	pickaxe.start
 	pickaxe.action = function

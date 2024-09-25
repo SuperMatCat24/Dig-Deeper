@@ -82,7 +82,7 @@ Robot.lastFuelTime = 0
 Robot.init = function
     super.init
     disp.sprites.push self
-    self.position = {"x": 0, "y": 59}
+    self.position = {"x": 0, "y": (globals.chunks.len*10)+self.chunkIndex*10-1}
     self.facing = {"x": 0, "y": 0}
     self.checkPath
     self.localBounds = new Bounds
@@ -267,7 +267,7 @@ WiperRobot.speed = 450
 WiperRobot.lastPos = {}
 
 WiperRobot.init = function
-    self.lastPos = {"x": 0, "y": 59}
+    self.lastPos = {"x": 0, "y": (globals.chunks.len*10)+self.chunkIndex*10-1}
     super.init 
 end function
 
