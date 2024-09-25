@@ -85,8 +85,8 @@ oreValues[29] = {"type": "random", "amount": 1, "color": color.white} // Random
 oreValues[30] = {"type": "crate2", "amount": 1, "color": color.brown} // Chest level 2
 
 oreValues[32] = {"type": "stone", "amount": 0, "color": color.purple} // Bedrock
-oreValues[33] = {"type": "stone", "amount": 15, "color": color.yellow} // Cobblestone
-oreValues[34] = {"type": "stone", "amount": 7, "color": color.yellow} // Stone
+oreValues[33] = {"type": "stone", "amount": 15, "color": color.orange} // Cobblestone
+oreValues[34] = {"type": "stone", "amount": 7, "color": color.orange} // Stone
 oreValues[35] = {"type": "gold", "amount": 10, "color": color.yellow} // Gold
 oreValues[36] = {"type": "diamond", "amount": 5, "color": color.aqua} // Diamond
 oreValues[37] = {"type": "random", "amount": 1, "color": color.white} // Random
@@ -116,28 +116,28 @@ healthValues[12] = 10 // Copper
 healthValues[13] = 25 // Gold
 healthValues[14] = 50 // Chest
 
-healthValues[17] = 5 // Cobblestone
-healthValues[18] = 5 // Stone
+healthValues[17] = 7 // Cobblestone
+healthValues[18] = 7 // Stone
 healthValues[19] = 15 // Copper
 healthValues[20] = 30 // Gold
 healthValues[21] = 40 // Diamond
 healthValues[22] = 100 // Chest
 
-healthValues[25] = 10 // Cobblestone
-healthValues[26] = 10 // Stone
+healthValues[25] = 15 // Cobblestone
+healthValues[26] = 15 // Stone
 healthValues[27] = 40 // Gold
 healthValues[28] = 45 // Diamond
 healthValues[29] = 50 // Random
 healthValues[30] = 100 // Chest
 
-healthValues[33] = 20 // Cobblestone
-healthValues[34] = 20 // Stone
+healthValues[33] = 35 // Cobblestone
+healthValues[34] = 35 // Stone
 healthValues[35] = 80 // Gold
 healthValues[36] = 100 // Diamond
 healthValues[37] = 100 // Random
 healthValues[38] = 150 // Chest
 
-healthValues[40] = 100 // Lava
+healthValues[40] = 10000 // Lava
 
 cellAfterMinedValues = {}
 cellAfterMinedValues[1] = 0 // Cobblestone
@@ -214,6 +214,14 @@ fortuneKeyTwoCount = 0
 fortuneKeyThreeCount = 0
 
 // ========= HELPER FUNCTIONS ==========
+
+Sprite.isOnScreen = function
+	if self.x + 64 - disp.scrollX <= 0 then return false
+	if self.x - 64 - disp.scrollX >= 960 then return false
+	if self.y + 64 - disp.scrollY <= 0 then return false
+	if self.y - 64 - disp.scrollY >= 960 then return false
+	return true
+end function
 
 // Function to perform a weighted random selection
 weightedRandom = function(items)
@@ -570,6 +578,7 @@ CraftButton = new textUI.Button
 CraftButton.cost = {"stone": 0, "coal": 0, "copper": 0, "gold": 0, "diamond": 0}
 CraftButton.buyResult = "LvlOneRobot"
 CraftButton.text = "Level One Robot: "
+CraftButton.color = color.yellow
 
 CraftButton.make = function(column, row, width=12)
     noob = new self
@@ -580,7 +589,7 @@ CraftButton.make = function(column, row, width=12)
 end function
 
 CraftButton.updateText = function
-    text.color = color.yellow
+    text.color = self.color
     textUtil.printAt self.fromCol, self.fromRow+1, self.text
 
     costString = ""
@@ -639,6 +648,7 @@ craftScreen = function
     robotOne.cost = {"stone": 40, "coal": 15, "copper": 0, "gold": 0, "diamond": 0}
     robotOne.buyResult = "LvlOneRobot"
     robotOne.text = "Level One Robot: "
+    robotOne.color = stoneColor
     robotOne.updateText
     robotOne.start
 
@@ -646,6 +656,7 @@ craftScreen = function
     robotTwo.cost = {"stone": 100, "coal": 25, "copper": 5, "gold": 0, "diamond": 0}
     robotTwo.buyResult = "LvlTwoRobot"
     robotTwo.text = "Level Two Robot: "
+    robotTwo.color = coalColor
     robotTwo.updateText
     robotTwo.start
 
@@ -653,6 +664,7 @@ craftScreen = function
     robotThree.cost = {"stone": 100, "coal": 50, "copper": 75, "gold": 0, "diamond": 0}
     robotThree.buyResult = "LvlThreeRobot"
     robotThree.text = "Level Three Robot: "
+    robotThree.color = copperColor
     robotThree.updateText
     robotThree.start
 
@@ -660,6 +672,7 @@ craftScreen = function
     robotFour.cost = {"stone": 500, "coal": 150, "copper": 250, "gold": 10, "diamond": 0}
     robotFour.buyResult = "LvlFourRobot"
     robotFour.text = "Level Four Robot: "
+    robotFour.color = goldColor
     robotFour.updateText
     robotFour.start
 
@@ -667,6 +680,7 @@ craftScreen = function
     robotFive.cost = {"stone": 0, "coal": 1000, "copper": 0, "gold": 500, "diamond": 100}
     robotFive.buyResult = "LvlFiveRobot"
     robotFive.text = "Level Five Robot: "
+    robotFive.color = diamondColor
     robotFive.updateText
     robotFive.start
 
@@ -674,8 +688,17 @@ craftScreen = function
     wiperRobot.cost = {"stone": 1000, "coal": 0, "copper": 300, "gold": 25, "diamond": 0}
     wiperRobot.buyResult = "WiperRobot"
     wiperRobot.text = "Wiper Robot: "
+    wiperRobot.color = "#AAAAFF"
     wiperRobot.updateText
     wiperRobot.start
+
+    blasterRobot = CraftButton.make(5, 9, 40)
+    blasterRobot.cost = {"stone": 0, "coal": 0, "copper": 1500, "gold": 750, "diamond": 250}
+    blasterRobot.buyResult = "BlasterRobot"
+    blasterRobot.text = "Blaster Robot: "
+    blasterRobot.color = "#AA5577"
+    blasterRobot.updateText
+    blasterRobot.start
 
     updatePickaxeCost = function
         if globals.pickaxeUpgrade == 0 then
@@ -693,13 +716,14 @@ craftScreen = function
         end if
     end function
     updatePickaxeCost
-    textUtil.printAt 5, 10, "Pickaxe: "
+    text.color = color.white
+    textUtil.printAt 5, 8, "Pickaxe: "
     if globals.pickaxeUpgrade == 0 then
-        pickaxe = textUI.Button.make(5, 9, 40, "Buy For: " + formatNumber(pickaxeCost.stone) + " Stone, " + formatNumber(pickaxeCost.copper) + " Copper")
+        pickaxe = textUI.Button.make(5, 7, 40, "Buy For: " + formatNumber(pickaxeCost.stone) + " Stone, " + formatNumber(pickaxeCost.copper) + " Copper")
     else if globals.pickaxeUpgrade == 1 then
-        pickaxe = textUI.Button.make(5, 9, 40, "Buy For: " + formatNumber(pickaxeCost.copper) + " Copper, " + formatNumber(pickaxeCost.gold) + " Gold")
+        pickaxe = textUI.Button.make(5, 7, 40, "Buy For: " + formatNumber(pickaxeCost.copper) + " Copper, " + formatNumber(pickaxeCost.gold) + " Gold")
     else
-        pickaxe = textUI.Button.make(5, 9, 40, "Buy For: " + formatNumber(pickaxeCost.gold) + " Gold, " + formatNumber(pickaxeCost.diamond) + " Diamond")
+        pickaxe = textUI.Button.make(5, 7, 40, "Buy For: " + formatNumber(pickaxeCost.gold) + " Gold, " + formatNumber(pickaxeCost.diamond) + " Diamond")
     end if
 	pickaxe.start
 	pickaxe.action = function
@@ -730,7 +754,7 @@ craftScreen = function
         end if
 
         updatePickaxeCost
-        textUtil.printAt 5, 10, "Pickaxe: "
+        textUtil.printAt 5, 8, "Pickaxe: "
 
         if globals.pickaxeUpgrade == 0 then
             self.caption = "Buy For: " + formatNumber(pickaxeCost.stone) + " Stone, " + formatNumber(pickaxeCost.copper) + " Copper"
@@ -754,6 +778,7 @@ craftScreen = function
             robotFour.stop
             robotFive.stop
             wiperRobot.stop
+            blasterRobot.stop
             pickaxe.stop
             textUtil.clearRect 4, 2, 46, 22
             return
@@ -1029,6 +1054,7 @@ getChestPrize = function(lvl=1)
     if lvl == 1 then
         random = rnd
         if random <= 0.5 then
+            prize.push ["stone", ceil(mathUtil.randRange(100, 200))]
             prize.push ["coal", ceil(mathUtil.randRange(20, 50))]
             if rnd < 0.6 then prize.push ["copper", ceil(mathUtil.randRange(20, 50))]
             if rnd < 0.3 then prize.push ["gold", ceil(mathUtil.randRange(1, 5))]
@@ -1040,9 +1066,10 @@ getChestPrize = function(lvl=1)
     else if lvl == 2 then
         random = rnd
         if random <= 0.5 then
-            prize.push ["copper", ceil(mathUtil.randRange(20, 75))]
-            if rnd < 0.6 then prize.push ["gold", ceil(mathUtil.randRange(10, 25))]
-            if rnd < 0.3 then prize.push ["diamond", ceil(mathUtil.randRange(2, 10))]
+            prize.push ["coal", ceil(mathUtil.randRange(150, 200))]
+            prize.push ["copper", ceil(mathUtil.randRange(50, 175))]
+            if rnd < 0.7 then prize.push ["gold", ceil(mathUtil.randRange(10, 25))]
+            if rnd < 0.4 then prize.push ["diamond", ceil(mathUtil.randRange(2, 10))]
         else if random <= 0.75 then
             prize = "speedKeyTwo"
         else
@@ -1052,8 +1079,9 @@ getChestPrize = function(lvl=1)
         random = rnd
         if random <= 0.5 then
             prize.push ["coal", ceil(mathUtil.randRange(250, 500))]
-            if rnd < 0.6 then prize.push ["gold", ceil(mathUtil.randRange(100, 500))]
-            if rnd < 0.3 then prize.push ["diamond", ceil(mathUtil.randRange(10, 50))]
+            prize.push ["copper", ceil(mathUtil.randRange(200, 500))]
+            if rnd < 0.8 then prize.push ["gold", ceil(mathUtil.randRange(100, 500))]
+            if rnd < 0.5 then prize.push ["diamond", ceil(mathUtil.randRange(10, 50))]
         else if random <= 0.7 then
             prize = "speedKeyThree"
         else
